@@ -403,9 +403,10 @@ impl<T> LinearHashMap<T> {
         if Self::is_valid_key(input_key) {
             // Check if we are out of space
             if self.size() == self.max_in_use_elements {
-                return TryInsertResult::OutOfSpace((input_key, input_value));
+                TryInsertResult::OutOfSpace((input_key, input_value))
+            } else {
+                self.try_insert_internal(input_key, input_value, true)
             }
-            self.try_insert_internal(input_key, input_value, true)
         } else {
             TryInsertResult::InvalidKey
         }
