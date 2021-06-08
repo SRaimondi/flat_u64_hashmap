@@ -141,6 +141,7 @@ pub enum ConstructionError {
     InvalidBufferSize,
 }
 
+#[must_use]
 pub enum TryInsertResult<T> {
     Success,
     ExistingKey,
@@ -149,6 +150,7 @@ pub enum TryInsertResult<T> {
     MaxPslReached((u64, T)),
 }
 
+#[must_use]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum InsertResult {
     Success,
@@ -332,7 +334,6 @@ impl<T> LinearHashMap<T> {
     /// Internal helper function to insert a new value in the map. The boolean value is there and
     /// always constant such that the internal check to see if the key is already there can be skipped.
     #[inline]
-    #[must_use]
     fn try_insert_internal(
         &mut self,
         input_key: u64,
@@ -398,7 +399,6 @@ impl<T> LinearHashMap<T> {
     }
 
     /// Try to insert an element, this methods does not resize if it's not possible to insert it.
-    #[must_use]
     pub fn try_insert(&mut self, input_key: u64, input_value: T) -> TryInsertResult<T> {
         if Self::is_valid_key(input_key) {
             // Check if we are out of space
@@ -414,7 +414,6 @@ impl<T> LinearHashMap<T> {
 
     /// Insert an element in the map, resizes the map if the map is out of space or we did reach
     /// the maximum psl.
-    #[must_use]
     pub fn insert(&mut self, input_key: u64, input_value: T) -> InsertResult {
         let mut to_insert_key = input_key;
         let mut to_insert_value = input_value;
