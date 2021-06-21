@@ -388,7 +388,7 @@ impl<T> LinearHashMap<T> {
     pub fn try_insert(&mut self, input_key: u64, input_value: T) -> TryInsertResult<T> {
         if !Self::is_valid_key(input_key) {
             TryInsertResult::InvalidKey
-        } else if let Some(_) = self.find_key_index(input_key) {
+        } else if self.has_key(input_key) {
             TryInsertResult::ExistingKey
         } else if self.size() == self.max_in_use_elements {
             TryInsertResult::OutOfSpace((input_key, input_value))
