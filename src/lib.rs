@@ -323,7 +323,7 @@ impl<T> LinearHashMap<T> {
         for e in &mut current_elements {
             if !e.is_free() {
                 let (key, value) = unsafe { e.unpack() };
-                match self.try_insert_internal(key, value, false) {
+                match self.try_insert_internal(key, value) {
                     TryInsertResult::Success => (),
                     _ => panic!("Could not add key that was already in the map during resize"),
                 }
@@ -334,20 +334,13 @@ impl<T> LinearHashMap<T> {
     /// Internal helper function to insert a new value in the map. The boolean value is there and
     /// always constant such that the internal check to see if the key is already there can be skipped.
     #[inline]
-    fn try_insert_internal(
-        &mut self,
-        input_key: u64,
-        input_value: T,
-        check_existing_key: bool,
-    ) -> TryInsertResult<T> {
+    fn try_insert_internal(&mut self, input_key: u64, input_value: T) -> TryInsertResult<T> {
         // Compute the index where the key should be
         let mut element_index = self.compute_key_ideal_index(input_key);
         // Create placeholder element to insert
         let mut to_insert_psl = 0;
         let mut to_insert_key = input_key;
         let mut to_insert_value = input_value;
-        // Flag to check if the key is the input one
-        let mut is_input_key = true;
 
         loop {
             // Get the candidate for insertion
@@ -361,13 +354,6 @@ impl<T> LinearHashMap<T> {
                 // Increase the number of elements in use and return success
                 self.in_use_elements += 1;
                 return TryInsertResult::Success;
-            }
-            // If requested, check if the input key matches the one we want to insert
-            if check_existing_key
-                && is_input_key
-                && to_insert_key == insertion_candidate.extract_key()
-            {
-                return TryInsertResult::ExistingKey;
             }
             // Check if the PSL of the element to insert is larger than the one of the candidate, swap in that case
             if to_insert_psl > insertion_candidate.extract_psl() {
@@ -400,15 +386,14 @@ impl<T> LinearHashMap<T> {
 
     /// Try to insert an element, this methods does not resize if it's not possible to insert it.
     pub fn try_insert(&mut self, input_key: u64, input_value: T) -> TryInsertResult<T> {
-        if Self::is_valid_key(input_key) {
-            // Check if we are out of space
-            if self.size() == self.max_in_use_elements {
-                TryInsertResult::OutOfSpace((input_key, input_value))
-            } else {
-                self.try_insert_internal(input_key, input_value, true)
-            }
-        } else {
+        if !Self::is_valid_key(input_key) {
             TryInsertResult::InvalidKey
+        } else if let Some(_) = self.find_key_index(input_key) {
+            TryInsertResult::ExistingKey
+        } else if self.size() == self.max_in_use_elements {
+            TryInsertResult::OutOfSpace((input_key, input_value))
+        } else {
+            self.try_insert_internal(input_key, input_value)
         }
     }
 
