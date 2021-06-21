@@ -357,8 +357,6 @@ impl<T> LinearHashMap<T> {
             }
             // Check if the PSL of the element to insert is larger than the one of the candidate, swap in that case
             if to_insert_psl > insertion_candidate.extract_psl() {
-                // Set that we are not processing the input key anymore
-                is_input_key = false;
                 // Store temporary the psl and the key to insert
                 let t_psl = to_insert_psl;
                 let t_key = to_insert_key;
@@ -424,8 +422,8 @@ impl<T> LinearHashMap<T> {
         assert_eq!(MAX_PSL % 2, 0);
         const NUM_PASSES: usize = MAX_PSL as usize / 2;
 
-        // Check if the key is valid
-        if Self::is_valid_key(key) {
+        // Check if the map is not empty and the key is valid
+        if self.in_use_elements > 0 && Self::is_valid_key(key) {
             let mut element_index = self.compute_key_ideal_index(key);
             let mut current_psl = 0;
             for _ in 0..=NUM_PASSES {
